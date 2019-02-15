@@ -1,19 +1,43 @@
 package com.example.smartlock;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity
 {
-	String _ssid;
-
 	private static final String PREF_NAME = "SmartLockAnv";
 	private static final int PRIVATE_MODE = 0;
+	String _ssid;
+	String url = "<url goes here>";
+	StringRequest request;
+	RequestQueue queue;
+
+	Button unlock_btn;
 
 	SharedPreferences sharedPreferences;
 	SharedPreferences.Editor editor;
@@ -24,7 +48,9 @@ public class MainActivity extends AppCompatActivity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 
-		sharedPreferences = getApplicationContext().getSharedPreferences(PREF_NAME,PRIVATE_MODE);
+		queue = Volley.newRequestQueue(MainActivity.this);
+
+		sharedPreferences = getApplicationContext().getSharedPreferences(PREF_NAME, PRIVATE_MODE);
 		editor = sharedPreferences.edit();
 
 		WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -36,11 +62,74 @@ public class MainActivity extends AppCompatActivity
 		// _ssid now is printing name of SSID in logs
 		Log.v("SSID: ", "ssid: " + _ssid);
 		set_ssid(_ssid);
+
+		unlock_btn.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View view)
+			{
+				if (!checkNet())
+				{
+					// No net
+					Toast.makeText(MainActivity.this, "Check Net", Toast.LENGTH_SHORT).show();
+				}
+				else
+				{
+					if (get_pref_ssid().equals("pref_ssid"))
+					{
+						// default ssid of house not given
+						Toast.makeText(MainActivity.this, "Please choose ssid of home", Toast.LENGTH_SHORT).show();
+					}
+					else
+					{
+						// Volley request
+						request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>()
+						{
+							@Override
+							public void onResponse(String response)
+							{
+								try
+								{
+									JSONObject root = new JSONObject(response);
+									if (root.optString("status").equals("success"))
+									{
+										// status toggled.
+									}
+									else
+									{
+										// some error
+										Toast.makeText(MainActivity.this, "Some error", Toast.LENGTH_SHORT).show();
+									}
+								}
+								catch (JSONException e)
+								{
+									e.printStackTrace();
+								}
+							}
+						}, new Response.ErrorListener()
+						{
+							@Override
+							public void onErrorResponse(VolleyError error)
+							{
+								// some error
+								Toast.makeText(MainActivity.this, "Some error occured", Toast.LENGTH_SHORT).show();
+
+							}
+						});
+					}
+				}
+			}
+		});
 	}
 
-	public void set_ssid(String ssid)
+	public String get_pref_ssid()
 	{
-		editor.putString("SSID",ssid);
+		return sharedPreferences.getString("PREF_SSID", "pref_ssid");
+	}
+
+	public void set_pref_ssid(String ssid)
+	{
+		editor.putString("PREF_SSID", ssid);
 		editor.apply();
 		editor.commit();
 	}
@@ -48,6 +137,55 @@ public class MainActivity extends AppCompatActivity
 	public String get_ssid()
 	{
 		// default ssid is set to "ssid"
-		return sharedPreferences.getString("SSID","ssid");
+		return sharedPreferences.getString("SSID", "ssid");
+	}
+
+	public void set_ssid(String ssid)
+	{
+		editor.putString("SSID", ssid);
+		editor.apply();
+		editor.commit();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu)
+	{
+		getMenuInflater().inflate(R.menu.main_options, menu);
+		return true;
+	}
+
+	public boolean checkNet()
+	{
+		ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+		return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item)
+	{
+		int id = item.getItemId();
+		switch (id)
+		{
+			case R.id.action_ssid:
+				LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
+				View view = inflater.inflate(R.layout.ssid_input_layout, null);
+				new AlertDialog.Builder(MainActivity.this)
+						.setMessage("Enter ssid")
+						.setCancelable(true)
+						.setView(R.layout.ssid_input_layout)
+						.setPositiveButton("Enter", new DialogInterface.OnClickListener()
+						{
+							@Override
+							public void onClick(DialogInterface dialogInterface, int i)
+							{
+								// take input of ssid from user and use set_ssid method to store ssid in shared pref.
+								EditText ssid = (EditText) ((AlertDialog) dialogInterface).findViewById(R.id.ssid_edittext);
+								set_pref_ssid(ssid.getText().toString());
+							}
+						});
+
+				return true;
+		}
+		return false;
 	}
 }
