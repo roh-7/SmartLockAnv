@@ -3,7 +3,6 @@ package com.example.smartlock;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -28,16 +27,20 @@ import com.android.volley.toolbox.Volley;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import co.aenterhy.toggleswitch.ToggleSwitchButton;
+
 public class MainActivity extends AppCompatActivity
 {
 	private static final String PREF_NAME = "SmartLockAnv";
 	private static final int PRIVATE_MODE = 0;
 	String _ssid;
-	String url = "<url goes here>";
+	String url = "http://192.168.0.100/toggle.php";
 	StringRequest request;
 	RequestQueue queue;
 
 	Button unlock_btn;
+
+	ToggleSwitchButton toggle;
 
 	SharedPreferences sharedPreferences;
 	SharedPreferences.Editor editor;
@@ -52,6 +55,9 @@ public class MainActivity extends AppCompatActivity
 
 		sharedPreferences = getApplicationContext().getSharedPreferences(PREF_NAME, PRIVATE_MODE);
 		editor = sharedPreferences.edit();
+
+		unlock_btn = findViewById(R.id.unlock_btn);
+		toggle = (ToggleSwitchButton) findViewById(R.id.toggle);
 
 		WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 		WifiInfo info = wifiManager.getConnectionInfo();
@@ -68,56 +74,23 @@ public class MainActivity extends AppCompatActivity
 			@Override
 			public void onClick(View view)
 			{
-				if (!checkNet())
-				{
-					// No net
-					Toast.makeText(MainActivity.this, "Check Net", Toast.LENGTH_SHORT).show();
-				}
-				else
-				{
-					if (get_pref_ssid().equals("pref_ssid"))
-					{
-						// default ssid of house not given
-						Toast.makeText(MainActivity.this, "Please choose ssid of home", Toast.LENGTH_SHORT).show();
-					}
-					else
-					{
-						// Volley request
-						request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>()
-						{
-							@Override
-							public void onResponse(String response)
-							{
-								try
-								{
-									JSONObject root = new JSONObject(response);
-									if (root.optString("status").equals("success"))
-									{
-										// status toggled.
-									}
-									else
-									{
-										// some error
-										Toast.makeText(MainActivity.this, "Some error", Toast.LENGTH_SHORT).show();
-									}
-								}
-								catch (JSONException e)
-								{
-									e.printStackTrace();
-								}
-							}
-						}, new Response.ErrorListener()
-						{
-							@Override
-							public void onErrorResponse(VolleyError error)
-							{
-								// some error
-								Toast.makeText(MainActivity.this, "Some error occured", Toast.LENGTH_SHORT).show();
 
-							}
-						});
-					}
-				}
+			}
+		});
+
+		toggle.setOnTriggerListener(new ToggleSwitchButton.OnTriggerListener() {
+			@Override
+			public void toggledUp()
+			{
+				Log.v("toggled","up");
+				toggle();
+			}
+
+			@Override
+			public void toggledDown()
+			{
+				Log.v("toggled","down");
+				toggle();
 			}
 		});
 	}
@@ -154,10 +127,52 @@ public class MainActivity extends AppCompatActivity
 		return true;
 	}
 
-	public boolean checkNet()
+	public void toggle()
 	{
-		ConnectivityManager cm = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-		return cm.getActiveNetworkInfo() != null && cm.getActiveNetworkInfo().isConnectedOrConnecting();
+		if (get_pref_ssid().equals("pref_ssid"))
+		{
+			// default ssid of house not given
+			Toast.makeText(MainActivity.this, "Please choose ssid of home", Toast.LENGTH_SHORT).show();
+		}
+		else
+		{
+			// Volley request
+			request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>()
+			{
+				@Override
+				public void onResponse(String response)
+				{
+					try
+					{
+						JSONObject root = new JSONObject(response);
+						if (root.optString("status").equals("success"))
+						{
+							// status toggled.
+							Toast.makeText(MainActivity.this, "Status toggled successfully", Toast.LENGTH_SHORT).show();
+						}
+						else
+						{
+							// some error
+							Toast.makeText(MainActivity.this, "Some error", Toast.LENGTH_SHORT).show();
+						}
+					}
+					catch (JSONException e)
+					{
+						e.printStackTrace();
+					}
+				}
+			}, new Response.ErrorListener()
+			{
+				@Override
+				public void onErrorResponse(VolleyError error)
+				{
+					// some error
+					Toast.makeText(MainActivity.this, "Some error occured", Toast.LENGTH_SHORT).show();
+				}
+			});
+
+			queue.add(request);
+		}
 	}
 
 	@Override
@@ -180,9 +195,9 @@ public class MainActivity extends AppCompatActivity
 							{
 								// take input of ssid from user and use set_ssid method to store ssid in shared pref.
 								EditText ssid = (EditText) ((AlertDialog) dialogInterface).findViewById(R.id.ssid_edittext);
-								set_pref_ssid(ssid.getText().toString());
+								set_pref_ssid(ssid.getText().toString().trim());
 							}
-						});
+						}).show();
 
 				return true;
 		}

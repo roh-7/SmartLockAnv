@@ -7,5 +7,16 @@
         <item name = "colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name = "colorAccent">@color/colorAccent</item>
     </style>
+	
+	<style name = "ToggleSwitchButton">
+		<item name = "android:layout_width">wrap_content</item>
+		<item name = "android:layout_height">wrap_content</item>
+		<item name = "android:layout_centerHorizontal">true</item>
+		<item name = "android:layout_marginLeft">50dp</item>
+		<item name = "outerRadius">50dp</item>
+		<item name = "handleDrawable">@mipmap/ic_switch</item>
+		<item name = "upper">@mipmap/ic_unlock</item>
+		<item name = "bottom">@mipmap/ic_lock</item>
+	</style>
 
 </resources>
