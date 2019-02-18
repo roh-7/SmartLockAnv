@@ -153,6 +153,7 @@ public class MainActivity extends AppCompatActivity
 				public void onErrorResponse(VolleyError error)
 				{
 					// some error
+					error.printStackTrace();
 					Toast.makeText(MainActivity.this, "Some error occured", Toast.LENGTH_SHORT).show();
 				}
 			});
