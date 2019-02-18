@@ -31,8 +31,10 @@ public class MainActivity extends AppCompatActivity
 	private static final String PREF_NAME = "SmartLockAnv";
 	private static final int PRIVATE_MODE = 0;
 	String _ssid;
-	String url = "http://192.168.0.100/toggle.php";
-	StringRequest request;
+	String unlock_url = "http://192.168.0.100/unlock.php";
+	String lock_url = "http://192.168.0.100/lock.php";
+	StringRequest lock_request;
+	StringRequest unlock_request;
 	RequestQueue queue;
 
 	ToggleSwitchButton toggle;
@@ -69,14 +71,16 @@ public class MainActivity extends AppCompatActivity
 			public void toggledUp()
 			{
 				Log.v("toggled", "up");
-				toggle();
+				Log.v("toggled", "unlock");
+				unlock();
 			}
 
 			@Override
 			public void toggledDown()
 			{
 				Log.v("toggled", "down");
-				toggle();
+				Log.v("toggled", "down");
+				lock();
 			}
 		});
 	}
@@ -113,7 +117,7 @@ public class MainActivity extends AppCompatActivity
 		return true;
 	}
 
-	public void toggle()
+	public void unlock()
 	{
 		if (get_pref_ssid().equals("pref_ssid"))
 		{
@@ -123,7 +127,7 @@ public class MainActivity extends AppCompatActivity
 		else
 		{
 			// Volley request
-			request = new StringRequest(Request.Method.GET, url, new Response.Listener<String>()
+			unlock_request = new StringRequest(Request.Method.GET, lock_url, new Response.Listener<String>()
 			{
 				@Override
 				public void onResponse(String response)
@@ -158,7 +162,56 @@ public class MainActivity extends AppCompatActivity
 				}
 			});
 
-			queue.add(request);
+			queue.add(unlock_request);
+		}
+	}
+
+	public void lock()
+	{
+		if (get_pref_ssid().equals("pref_ssid"))
+		{
+			// default ssid of house not given
+			Toast.makeText(MainActivity.this, "Please choose ssid of home", Toast.LENGTH_SHORT).show();
+		}
+		else
+		{
+			// Volley request
+			lock_request = new StringRequest(Request.Method.GET, lock_url, new Response.Listener<String>()
+			{
+				@Override
+				public void onResponse(String response)
+				{
+					try
+					{
+						JSONObject root = new JSONObject(response);
+						if (root.optString("status").equals("success"))
+						{
+							// status toggled.
+							Toast.makeText(MainActivity.this, "Status toggled successfully", Toast.LENGTH_SHORT).show();
+						}
+						else
+						{
+							// some error
+							Toast.makeText(MainActivity.this, "Some error", Toast.LENGTH_SHORT).show();
+						}
+					}
+					catch (JSONException e)
+					{
+						e.printStackTrace();
+					}
+				}
+			}, new Response.ErrorListener()
+			{
+				@Override
+				public void onErrorResponse(VolleyError error)
+				{
+					// some error
+					error.printStackTrace();
+					Toast.makeText(MainActivity.this, "Some error occured", Toast.LENGTH_SHORT).show();
+				}
+			});
+
+			queue.add(lock_request);
 		}
 	}
 

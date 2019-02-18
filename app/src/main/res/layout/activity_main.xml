@@ -15,7 +15,6 @@
 	 app:upper ="@mipmap/ic_unlock"
 	 app:bottom="@mipmap/ic_lock"
 	 app:handleDrawable="@mipmap/ic_switch"
-	 
 	 />
 
 </RelativeLayout>
