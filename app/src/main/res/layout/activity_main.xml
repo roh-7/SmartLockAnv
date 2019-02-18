@@ -8,22 +8,12 @@
  android:orientation = "vertical"
  tools:context = ".MainActivity">
 	
-	<Button
-	 android:id = "@+id/unlock_btn"
-	 android:layout_width = "wrap_content"
-	 android:layout_height = "wrap_content"
-	 android:gravity = "center"
-	 android:padding="8dp"
-	 android:text = "Toggle" />
-	
-	
 	<co.aenterhy.toggleswitch.ToggleSwitchButton
 	 android:id = "@+id/toggle"
-	 android:layout_width = "100dp"
-	 android:layout_height = "200dp"
+	 android:layout_width = "150dp"
+	 android:layout_height = "300dp"
 	 android:layout_centerVertical="true"
-	 android:layout_centerHorizontal="true"
-	 android:layout_marginStart="50dp"
+	 android:layout_marginStart="150dp"
 	 app:upper ="@mipmap/ic_unlock"
 	 app:bottom="@mipmap/ic_lock"
 	 app:handleDrawable="@mipmap/ic_switch"

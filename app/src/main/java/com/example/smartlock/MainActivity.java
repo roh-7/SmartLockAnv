@@ -9,11 +9,8 @@ import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -38,8 +35,6 @@ public class MainActivity extends AppCompatActivity
 	StringRequest request;
 	RequestQueue queue;
 
-	Button unlock_btn;
-
 	ToggleSwitchButton toggle;
 
 	SharedPreferences sharedPreferences;
@@ -56,7 +51,6 @@ public class MainActivity extends AppCompatActivity
 		sharedPreferences = getApplicationContext().getSharedPreferences(PREF_NAME, PRIVATE_MODE);
 		editor = sharedPreferences.edit();
 
-		unlock_btn = findViewById(R.id.unlock_btn);
 		toggle = (ToggleSwitchButton) findViewById(R.id.toggle);
 
 		WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
@@ -69,27 +63,19 @@ public class MainActivity extends AppCompatActivity
 		Log.v("SSID: ", "ssid: " + _ssid);
 		set_ssid(_ssid);
 
-		unlock_btn.setOnClickListener(new View.OnClickListener()
+		toggle.setOnTriggerListener(new ToggleSwitchButton.OnTriggerListener()
 		{
-			@Override
-			public void onClick(View view)
-			{
-
-			}
-		});
-
-		toggle.setOnTriggerListener(new ToggleSwitchButton.OnTriggerListener() {
 			@Override
 			public void toggledUp()
 			{
-				Log.v("toggled","up");
+				Log.v("toggled", "up");
 				toggle();
 			}
 
 			@Override
 			public void toggledDown()
 			{
-				Log.v("toggled","down");
+				Log.v("toggled", "down");
 				toggle();
 			}
 		});
@@ -182,8 +168,6 @@ public class MainActivity extends AppCompatActivity
 		switch (id)
 		{
 			case R.id.action_ssid:
-				LayoutInflater inflater = LayoutInflater.from(MainActivity.this);
-				View view = inflater.inflate(R.layout.ssid_input_layout, null);
 				new AlertDialog.Builder(MainActivity.this)
 						.setMessage("Enter ssid")
 						.setCancelable(true)
